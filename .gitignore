@@ -8,4 +8,4 @@ opencode.json
 .env
 __pycache__
 tests/
-data
+data/
