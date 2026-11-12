@@ -1,21 +1,31 @@
 {
-  "site_name": "Ghosh Polymers, Kolkata",
   "register_path": "data/register.json",
   "interviews_path": "data/interviews.json",
   "schema_path": "data/output_schema.json",
   "output_path": "output/result.json",
   "cache_path": "data/llm_cache.json",
-  "budget_inr": 75000,
-  "eway_bill_threshold_inr": 100000,
   "night_start_hour": 20,
-  "min_movement_minutes": 5,
-  "closed_weekdays": [0],
+  "column_map": {
+    "sl": "sl",
+    "date": "date",
+    "vehicle": "vehicle",
+    "party": "party",
+    "in_time": "in_time",
+    "out_time": "out_time",
+    "type": "type",
+    "invoice_no": "invoice_no",
+    "chit_no": "chit_no",
+    "guard": "guard",
+    "type_values": {
+      "invoice": "invoice",
+      "chit": "chit"
+    }
+  },
   "llm": {
-    "provider": "ollama",
-    "base_url": "http://localhost:11434",
-    "model": "qwen3:1.7b",
-    "timeout_ms": 300000,
-    "num_ctx": 4096,
-    "num_predict": 1200
+    "api_key_env": "GOOGLE_API_KEY",
+    "base_url": "https://generativelanguage.googleapis.com/v1beta",
+    "model": "gemini-3.5-flash",
+    "fallback_model": "gemini-3.5-flash-lite",
+    "timeout_s": 120
   }
 }
