@@ -1,7 +1,9 @@
 import json
 import os
+import random
+import time
+import urllib.error
 import urllib.request
-from pathlib import Path
 
 import jsonschema
 
@@ -79,7 +81,11 @@ DRAFT_SCHEMA = {
 
 
 def build_prompt(quotes, findings):
-    lines = [SYSTEM_PROMPT, "", "Register findings (computed by code; the only numbers you may use):"]
+    lines = [
+        SYSTEM_PROMPT,
+        "",
+        "Register findings (computed by code; the only numbers you may use):",
+    ]
     lines.extend(f"- {f}" for f in findings)
     lines.append("")
     lines.append("Interview quotes:")
@@ -109,41 +115,32 @@ def _call(base_url, model, key, prompt, timeout_s):
 
 
 def extract(cfg, quotes, findings, root):
-    """One real LLM call turns quotes into a Draft. Cache when it exists."""
-    cache = root / cfg["cache_path"]
-    if cache.exists():
-        return json.loads(cache.read_text()), "cache"
-
+    """Use Gemini to turn quotes into a structured draft."""
     llm = cfg["llm"]
     key = os.environ.get(llm["api_key_env"], "")
     if not key:
-        raise RuntimeError(
-            "No API key in the environment and no LLM cache; cannot extract."
-        )
+        raise RuntimeError("No API key in the environment; cannot extract.")
 
     prompt = build_prompt(quotes, findings)
-    models = [m for m in (llm["model"], llm.get("fallback_model")) if m]
+    models = [
+        m
+        for m in (llm["model"], llm.get("fallback_model"), llm.get("last_resort_model"))
+        if m
+    ]
     last_error = None
     for model in models:
-        for attempt in range(2):
+        for attempt in range(3):
             try:
-                text = _call(
-                    llm["base_url"], model, key, prompt, llm.get("timeout_s", 120)
-                )
-            except Exception as exc:
-                last_error = f"{model}: {exc}"
-                continue
-            try:
+                text = _call(llm["base_url"], model, key, prompt, llm.get("timeout_s", 120))
                 draft = json.loads(text)
                 jsonschema.validate(draft, DRAFT_SCHEMA)
+                return draft, f"live {model}"
+            except urllib.error.HTTPError as exc:
+                last_error = f"{model}: {exc}"
+                if exc.code != 503 or attempt == 2:
+                    break
+                time.sleep(2**attempt + random.uniform(0, 0.5))
             except Exception as exc:
-                message = getattr(exc, "message", None) or str(exc)
-                last_error = f"{model} schema: {message}"
-                prompt += (
-                    f"\n\nYour previous reply failed validation: {message}. "
-                    "Reply again with valid JSON matching the schema exactly."
-                )
-                continue
-            cache.write_text(json.dumps(draft, indent=2, ensure_ascii=False) + "\n")
-            return draft, f"live {model}"
+                last_error = f"{model}: {getattr(exc, 'message', None) or exc}"
+                break
     raise RuntimeError(f"LLM extraction failed: {last_error}")

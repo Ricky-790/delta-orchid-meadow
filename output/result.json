@@ -2,49 +2,43 @@
   "requirements": [
     {
       "id": "R1",
-      "text": "Generate and print gate passes directly from Tally invoices with a single click, automatically populating the truck number without re-keying data.",
+      "text": "Generate gate passes directly from Tally invoice data with one click, auto-populating vehicle number and eliminating manual re-typing.",
       "source_persona": "dev",
       "status": "confirmed"
     },
     {
       "id": "R2",
-      "text": "Ensure no truck departs the factory gate without a pre-existing bill or invoice.",
+      "text": "Require every departing truck to have a valid invoice issued prior to gate departure.",
       "source_persona": "dev",
       "status": "conflicting"
     },
     {
       "id": "R3",
-      "text": "Require e-way bill numbers on gate passes for all consignments valued over Rs 1,00,000 prior to gate clearance.",
+      "text": "Include the e-way bill number on the gate pass for any consignment exceeding Rs 1,00,000.",
       "source_persona": "anjali",
       "status": "confirmed"
     },
     {
       "id": "R4",
-      "text": "Support manual chit logging at the gate for after-hours night dispatches when the accounting office is closed.",
+      "text": "Allow night gate dispatches to leave using hand-written chits upon phone authorization when the office is closed, capturing date, lorry number, party, in time, out time, and chit number.",
       "source_persona": "bablu",
       "status": "confirmed"
     },
     {
       "id": "R5",
-      "text": "Provide user roles and shift logging for gate guards, accommodating night relief guards like Montu and head guards like Bablu.",
+      "text": "Support night duty guard handovers where Montu logs night dispatches and Bablu verifies them the next morning.",
       "source_persona": "bablu",
       "status": "confirmed"
     },
     {
       "id": "R6",
-      "text": "Log all dispatch movement details at the gate including date, lorry number, party name, entry time, exit time, and chit or invoice number.",
-      "source_persona": "bablu",
-      "status": "confirmed"
-    },
-    {
-      "id": "R7",
-      "text": "Provide offline local data logging and store-and-forward synchronization to ensure gate operations continue without active network connectivity.",
+      "text": "Provide offline capability in the gate application to operate without a continuous internet connection or reliable mobile signal.",
       "source_persona": "assumed",
       "status": "assumed"
     },
     {
-      "id": "R8",
-      "text": "Provide a reconciliation mechanism to link next-day generated Tally invoices back to night manual dispatch chits.",
+      "id": "R7",
+      "text": "Provide a reconciliation module to match handwritten night dispatches with invoices created on subsequent days.",
       "source_persona": "assumed",
       "status": "assumed"
     }
@@ -55,44 +49,28 @@
         "dev",
         "register"
       ],
-      "about": "Dev states every truck has an invoice before departure, but register records show 17 night chit dispatches (13%) executed without prior invoices.",
-      "resolution": "Configure the system to support controlled night chit logging with mandatory next-day invoice reconciliation."
-    },
-    {
-      "between": [
-        "bablu",
-        "register"
-      ],
-      "about": "Bablu claims he is not on shift at night and that Montu writes night chits, but the register attributes 6 night chit entries directly to Bablu.",
-      "resolution": "Enforce individual guard login authentication for every entry to prevent identity sharing or inaccurate logging."
+      "about": "Dev asserts that every truck leaves with an invoice before departure, whereas the gate register records 17 night dispatches (13.8%) leaving on handwritten chits without invoices.",
+      "resolution": "Allow gate pass system to record emergency night dispatches via chits while creating an automated reconciliation queue to match them with Tally invoices generated the next day."
     },
     {
       "between": [
         "dev",
-        "anjali"
+        "bablu"
       ],
-      "about": "Data release permission stalemate; Dev refers invoice data approval to Anjali, while Anjali refuses to release sales lists without explicit written authorization from Dev.",
-      "resolution": "Obtain formal written authorization from Dev explicitly approving data extraction from Tally."
-    },
-    {
-      "between": [
-        "dev",
-        "anjali"
-      ],
-      "about": "Enforcement of e-way bill validation rules on dispatches; Anjali mandates e-way bill compliance due to statutory risks, whereas Dev deflects decisions regarding e-way bill checks.",
-      "resolution": "Implement mandatory e-way bill validation for high-value consignments based on statutory advice from accounts."
+      "about": "Dev states that no truck ever leaves the gate without an invoice, while Bablu explains that night dispatches leave on handwritten chits when the office is shut and invoices are made the next morning.",
+      "resolution": "Implement a dual-mode entry process supporting immediate invoice-backed passes during daytime and chit-based entry for authorized night dispatches."
     }
   ],
   "constraints": [
-    "The gate cabin lacks a wired network connection to the office (200 meters away), and mobile cellular reception is weak and dead near the weighbridge.",
-    "System budget is strictly capped at Rs 75,000 total including hardware, with no additional expenditure permitted without Dev's approval.",
-    "Register findings rely on hand-copied entries from the paper gate register.",
-    "Available historical register audit data spans only a single one-month period (2026-10-01 to 2026-10-31)."
+    "The gate cabin has no wired internet line and is located 200 metres from the office, with cellular phone signal dropping completely near the weighbridge.",
+    "Total sanctioned project budget is strictly capped at Rs 75,000 all-inclusive, including hardware.",
+    "Gate register records provided for analysis were manually copied by hand and cover only a single month (2026-10-01 to 2026-10-31).",
+    "The physical gate register lacks columns for consignment value, weight, and e-way bill numbers, preventing automated rule verification directly from register data."
   ],
   "budget_inr": 75000,
   "register_findings": [
-    "123 movements logged 2026-10-01 to 2026-10-31: 106 on invoices, 17 on handwritten chits (13%).",
-    "Invoice movements arrive between 09:04 and 19:08 (average dwell 50 min); chit movements arrive between 20:25 and 23:59 (average dwell 24 min).",
+    "123 movements logged 2026-10-01 to 2026-10-31: 106 on invoices, 17 on handwritten chits (13.8%).",
+    "Invoice arrivals start between 09:04 and 17:53; departures end by 19:08 (average dwell 50 min). Chit arrivals start between 20:25 and 23:57; departures end by 23:59 (average dwell 24 min).",
     "All 17 chit movements start at or after 20:00: 11 by Montu, 6 by Bablu.",
     "No row falls on a Sunday: all 4 Sundays in the period are empty, and 0 weekdays are also dark.",
     "Invoice GP/26-27/2386 appears 2 times: row 5 on 2026-10-01 (invoice); row 59 on 2026-10-15 (chit).",
@@ -101,23 +79,22 @@
     "The register has no value, weight, or e-way bill columns, so invoice-value rules cannot be checked from this data.",
     "Trucks per active day: min 3, max 6, mean 4.6 over 27 active days.",
     "Source note: Ghosh Polymers gate register, 2026-10-01 to 2026-10-31, copied from the red register by hand.",
-    "Requirements, conflicts and constraints were extracted from 52 interview quotes in one LLM call (cache); every register number above was computed by code."
+    "Requirements, conflicts and constraints were extracted from 52 interview quotes in one LLM call (live gemini-3.5-flash); every register number above was computed by code."
   ],
   "plan": [
-    "Obtain formal written authorization from management for Tally data integration and export.",
-    "Develop a Tally integration module to automatically extract invoice details, vehicle numbers, consignment values, and e-way bill numbers.",
-    "Build an offline-capable gate pass application with local storage and store-and-forward capability to tolerate weak network signal.",
-    "Implement one-click gate pass generation for daytime invoice-backed dispatches.",
-    "Implement a dedicated night dispatch workflow allowing manual chit entry when accounts is closed.",
-    "Configure automated compliance rules to mandate e-way bill capture for consignments over Rs 1,00,000.",
-    "Create a reconciliation screen for accounts to link next-day Tally invoices to night chits.",
-    "Deploy hardware at the gate cabin and conduct user training for all shift guards."
+    "Build a standalone offline-first gate entry application capable of capturing vehicle movement details without continuous internet access.",
+    "Implement entry forms for date, vehicle number, party name, arrival/departure timestamps, chit numbers, and e-way bill details.",
+    "Add e-way bill recording and validation flags without hard-blocking dispatches based on consignment value limits.",
+    "Develop a reconciliation module for logging handwritten night chits and flagging unmatched entries for next-day review.",
+    "Deploy prototype software to gate-suitable hardware within the sanctioned Rs 75,000 budget constraint.",
+    "Prepare Tally data import interfaces to be enabled once Dev explicitly authorizes sales data exports from accounts."
   ],
   "open_questions": [
-    "Is e-invoicing mandatory for the company and are IRNs currently generated for every invoice? (Anjali or Dev would know)",
-    "What is the exact penalty amount per stopped truck and the total financial penalty paid last year for e-way bill violations? (Anjali would know)",
-    "Why does invoice GP/26-27/2386 appear twice in the register (once as an invoice on Oct 1 and once as a chit on Oct 15)? (Bablu or Dev would know)",
-    "What is the company's exact GST slab and annual turnover figure? (Anjali would know)",
-    "Should gate pass generation be hard-blocked at the guard screen when an e-way bill is missing for dispatches over Rs 1,00,000? (Dev would know)"
+    "Will Dev grant explicit permission to accounts to export Tally sales and invoice data? (Dev would know)",
+    "What specific penalty amounts and statutory sections apply to missing e-way bills on consignments over Rs 1,00,000? (Anjali would know)",
+    "Is the factory required to issue GST e-invoices with an IRN based on annual turnover? (Anjali would know)",
+    "Why does invoice GP/26-27/2386 appear twice in the October register (row 5 as invoice on 2026-10-01 and row 59 as chit on 2026-10-15)? (Bablu or Anjali would know)",
+    "Why do 16 out of 17 chit rows in the October register have no associated invoice number logged? (Bablu or Montu would know)",
+    "Who is formally authorized to phone the gate guard and approve night dispatches when the office is closed? (Dev would know)"
   ]
 }

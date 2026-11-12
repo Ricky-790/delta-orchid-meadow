@@ -6,3 +6,6 @@ gate.pub
 opencode.json
 *.log
 .env
+__pycache__
+tests/
+data

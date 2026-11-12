@@ -17,12 +17,30 @@ def build_output(draft, findings, quotes, provenance_note):
     index = {q["ref"]: q for q in quotes}
     rejected = 0
 
+    conflicts = []
+    for item in draft.get("conflicts", []):
+        if len(item.get("between", [])) != 2 or not _evidence_ok(item.get("evidence", []), index):
+            rejected += 1
+            continue
+        conflicts.append(
+            {
+                "between": item["between"],
+                "about": item["about"],
+                "resolution": item["resolution"],
+            }
+        )
+
     requirements = []
     for item in draft.get("requirements", []):
         if not _evidence_ok(item.get("evidence", []), index):
             rejected += 1
             continue
         if item["status"] == "confirmed" and item["source_persona"] == "assumed":
+            rejected += 1
+            continue
+        if item["status"] == "conflicting" and not any(
+            item["source_persona"] in conflict["between"] for conflict in conflicts
+        ):
             rejected += 1
             continue
         requirements.append(
@@ -41,19 +59,6 @@ def build_output(draft, findings, quotes, provenance_note):
             "source_persona": requirement["source_persona"],
             "status": requirement["status"],
         }
-
-    conflicts = []
-    for item in draft.get("conflicts", []):
-        if len(item.get("between", [])) != 2:
-            rejected += 1
-            continue
-        conflicts.append(
-            {
-                "between": item["between"],
-                "about": item["about"],
-                "resolution": item["resolution"],
-            }
-        )
 
     constraints = []
     for item in draft.get("constraints", []):

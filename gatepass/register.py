@@ -27,7 +27,7 @@ def analyse(reg, cmap, night_start):
     findings.append(
         f"{len(rows)} movements logged {dates[0]} to {dates[-1]}: "
         f"{len(invoice)} on invoices, {len(chit)} on handwritten chits "
-        f"({len(chit) * 100 // len(rows)}%)."
+        f"({len(chit) * 100 / len(rows):.1f}%)."
     )
 
     def span(group):
@@ -38,9 +38,10 @@ def analyse(reg, cmap, night_start):
     inv_lo, inv_hi, inv_dwell = span(invoice)
     chit_lo, chit_hi, chit_dwell = span(chit)
     findings.append(
-        f"Invoice movements arrive between {inv_lo} and {inv_hi} "
-        f"(average dwell {inv_dwell:.0f} min); chit movements arrive between "
-        f"{chit_lo} and {chit_hi} (average dwell {chit_dwell:.0f} min)."
+        f"Invoice arrivals start between {inv_lo} and {_fmt(max(_hm(r[cmap['in_time']]) for r in invoice))}; "
+        f"departures end by {inv_hi} (average dwell {inv_dwell:.0f} min). "
+        f"Chit arrivals start between {chit_lo} and {_fmt(max(_hm(r[cmap['in_time']]) for r in chit))}; "
+        f"departures end by {chit_hi} (average dwell {chit_dwell:.0f} min)."
     )
 
     night = [r for r in chit if int(r[cmap["in_time"]].split(":")[0]) >= night_start]
